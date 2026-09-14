@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from discord.app_commands import checks, MissingAnyRole
 import random
 import asyncio
 import aiosqlite
@@ -50,6 +51,7 @@ class WheelNamesView(discord.ui.View):
         
         await interaction.message.edit(embed=embed_result, view=None)
         await interaction.channel.send(f"🎉 **{winner}** won **{self.prize}**! (Hosted by: <@{self.host_id}>)")
+
 
 # 2. Interactive Join System (/wheel)
 class InteractiveGiveawayView(discord.ui.View):
@@ -133,6 +135,7 @@ class WheelCog(commands.Cog):
 
     @app_commands.command(name="wheelnames", description="Create a manual name raffle")
     @app_commands.describe(prize="The prize to win", participants="Names separated by commas (e.g. Alex, Mike, Sarah)")
+    @checks.has_any_role("Admin", "Giveaway Host")
     async def wheelnames_cmd(self, interaction: discord.Interaction, prize: str, participants: str):
         names = [name.strip() for name in participants.split(",") if name.strip()]
 
@@ -157,8 +160,14 @@ class WheelCog(commands.Cog):
         view = WheelNamesView(interaction.user.id, names, giveaway_id, prize)
         await interaction.response.send_message(embed=embed, view=view)
 
+    @wheelnames_cmd.error
+    async def wheelnames_error(self, interaction: discord.Interaction, error):
+        if isinstance(error, MissingAnyRole):
+            await interaction.response.send_message("❌ You do not have the required role to host a giveaway!", ephemeral=True)
+
     @app_commands.command(name="wheel", description="Create an interactive giveaway with a join button")
     @app_commands.describe(prize="The prize to win")
+    @checks.has_any_role("Admin", "Giveaway Host")
     async def wheel_cmd(self, interaction: discord.Interaction, prize: str):
         async with aiosqlite.connect("giveaways.db") as db:
             cursor = await db.execute("INSERT INTO giveaways (host_id, prize, status) VALUES (?, ?, 'active')", 
@@ -175,6 +184,11 @@ class WheelCog(commands.Cog):
 
         view = InteractiveGiveawayView(interaction.user.id, giveaway_id, prize)
         await interaction.response.send_message(embed=embed, view=view)
+
+    @wheel_cmd.error
+    async def wheel_error(self, interaction: discord.Interaction, error):
+        if isinstance(error, MissingAnyRole):
+            await interaction.response.send_message("❌ You do not have the required role to host a giveaway!", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(WheelCog(bot))
