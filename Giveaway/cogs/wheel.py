@@ -135,7 +135,7 @@ class WheelCog(commands.Cog):
 
     @app_commands.command(name="wheelnames", description="Create a manual name raffle")
     @app_commands.describe(prize="The prize to win", participants="Names separated by commas (e.g. Alex, Mike, Sarah)")
-    @checks.has_any_role("Admin", "Giveaway Host")
+    @checks.has_any_role("Leader", "Giveaway host")
     async def wheelnames_cmd(self, interaction: discord.Interaction, prize: str, participants: str):
         names = [name.strip() for name in participants.split(",") if name.strip()]
 
