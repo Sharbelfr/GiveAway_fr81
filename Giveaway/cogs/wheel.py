@@ -167,7 +167,7 @@ class WheelCog(commands.Cog):
 
     @app_commands.command(name="wheel", description="Create an interactive giveaway with a join button")
     @app_commands.describe(prize="The prize to win")
-    @checks.has_any_role("Admin", "Giveaway Host")
+    @checks.has_any_role("Leader", "Giveaway host")
     async def wheel_cmd(self, interaction: discord.Interaction, prize: str):
         async with aiosqlite.connect("giveaways.db") as db:
             cursor = await db.execute("INSERT INTO giveaways (host_id, prize, status) VALUES (?, ?, 'active')", 
