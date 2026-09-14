@@ -5,6 +5,7 @@ import random
 import asyncio
 import os
 from dotenv import load_dotenv
+from keep_alive import keep_alive
 
 # Load environment variables from .env file
 load_dotenv()
@@ -81,4 +82,8 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
     raise ValueError("DISCORD_TOKEN environment variable is not set. Please add it to your .env file.")
 
+# Start web server for Render port detection
+keep_alive()
+
+# Run the Discord bot
 bot.run(TOKEN)
